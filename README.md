@@ -1,22 +1,23 @@
 # Good Hamburger - Desafio Tecnico C#
 
-Implementacao do desafio da lanchonete Good Hamburger usando .NET, MVC, Blazor Server e SQL Server.
+Implementacao do desafio da lanchonete Good Hamburger usando .NET 10, Blazor Server, API REST separada e SQL Server.
 
 # Stack e arquitetura
 
-- .NET 8 (ASP.NET Core)
-- Monolito modular com separacao por camadas:
+- .NET 10 (ASP.NET Core)
+- Arquitetura em camadas:
   - `GoodHamburger.Domain`: entidades e regras de negocio
   - `GoodHamburger.Application`: casos de uso, DTOs e contratos
   - `GoodHamburger.Infrastructure`: EF Core, repositorios e migrations
-  - `GoodHamburger.Web`: host web com API REST, MVC e Blazor Server
+  - `GoodHamburger.Api`: host exclusivo da API REST
+  - `GoodHamburger.Web`: host exclusivo do frontend Blazor Server
   - `GoodHamburger.Tests.Unit`: testes unitarios das regras
 - EF Core com SQL Server e migrations
-- Middleware global para tratamento centralizado de erros
+- Middleware global de tratamento de erros na API
 
 # Requisitos atendidos
 
-- API REST em C# / ASP.NET Core
+- API REST em C# / ASP.NET Core separada do frontend
 - CRUD completo de pedidos:
   - `POST /api/orders`
   - `GET /api/orders`
@@ -30,9 +31,9 @@ Implementacao do desafio da lanchonete Good Hamburger usando .NET, MVC, Blazor S
   - Sanduiche + batata + refrigerante: 20%
   - Sanduiche + refrigerante: 15%
   - Sanduiche + batata: 10%
-- Validacao de itens duplicados (1 por categoria por pedido)
-- Frontend em Blazor Server consumindo a propria API
-- MVC com Controller + View de entrada
+- Validacao de itens duplicados no backend (1 por categoria por pedido)
+- Validacao no frontend para impedir envio sem item e sem sanduiche
+- Frontend Blazor consumindo API via `HttpClient` com `ApiBaseUrl` configuravel
 - Testes unitarios das regras de negocio
 
 # Regras de negocio implementadas
@@ -59,27 +60,37 @@ docker compose up -d
 dotnet restore
 ```
 
-# 3) Aplicar migrations (opcional, a API tambem aplica no startup)
+# 3) Confiar no certificado HTTPS de desenvolvimento (macOS/Linux/Windows)
 
 ```bash
-dotnet tool restore
-dotnet tool run dotnet-ef database update -p src/GoodHamburger.Infrastructure/GoodHamburger.Infrastructure.csproj -s src/GoodHamburger.Web/GoodHamburger.Web.csproj
+dotnet dev-certs https --clean
+dotnet dev-certs https --trust
 ```
 
-# 4) Rodar a aplicacao
+## 4) Rodar a API (porta dedicada)
 
 ```bash
-dotnet run --project src/GoodHamburger.Web/GoodHamburger.Web.csproj
+dotnet run --project src/GoodHamburger.Api/GoodHamburger.Api.csproj --launch-profile https
 ```
 
-Acessos:
+# 5) Rodar o frontend Blazor (porta dedicada)
 
-- Home MVC: `https://localhost:5001/` ou URL exibida no console
-- Swagger: `/swagger`
-- Blazor Cardapio: `/blazor/menu`
-- Blazor Pedidos: `/blazor/orders`
+```bash
+dotnet run --project src/GoodHamburger.Web/GoodHamburger.Web.csproj --launch-profile https
+```
 
-## Testes
+# Acessos locais
+
+- API HTTPS: `https://localhost:7122`
+- Swagger API: `https://localhost:7122/swagger`
+- Frontend Blazor HTTPS: `https://localhost:7121`
+- Tela de cardapio: `https://localhost:7121/blazor/menu`
+- Tela de pedidos: `https://localhost:7121/blazor/orders`
+
+Observacao: essas portas sao apenas a configuracao atual do projeto. Se quiser, altere em `Properties/launchSettings.json` de cada host.
+O frontend usa `ApiBaseUrl` em `src/GoodHamburger.Web/appsettings.json`.
+
+# Testes
 
 ```bash
 dotnet test
@@ -87,7 +98,7 @@ dotnet test
 
 ## Tratamento de erros
 
-Middleware global captura excecoes de dominio e recursos nao encontrados, retornando payload JSON padronizado:
+Middleware global na API captura excecoes de dominio e recursos nao encontrados, retornando payload JSON padronizado:
 
 ```json
 {

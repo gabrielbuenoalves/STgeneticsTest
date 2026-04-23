@@ -1,7 +1,7 @@
 using GoodHamburger.Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
-namespace GoodHamburger.Web.Controllers;
+namespace GoodHamburger.Api.Controllers;
 
 [ApiController]
 [Route("api/menu")]

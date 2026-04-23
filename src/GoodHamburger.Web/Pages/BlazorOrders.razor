@@ -1,6 +1,5 @@
 @page "/"
 @page "/blazor/orders"
-@inject HttpClient Http
 
 <div class="space-y-6">
     <div class="space-y-2">
@@ -23,6 +22,7 @@
     else
     {
         <EditForm Model="_form" OnValidSubmit="CreateOrderAsync">
+            <DataAnnotationsValidator />
             <div class="grid gap-4 lg:grid-cols-3">
                 @foreach (var group in _menuItems.GroupBy(item => item.Type))
                 {
@@ -33,7 +33,7 @@
                             @foreach (var item in group)
                             {
                                 <label class="flex cursor-pointer items-center gap-3 rounded-2xl border border-transparent bg-white px-4 py-3 text-sm shadow-sm shadow-slate-200/40 transition hover:border-amber-200 hover:bg-amber-50" @key="item.Id">
-                                    <input class="h-4 w-4 border-slate-300 text-amber-600 focus:ring-amber-500" type="radio" name="@group.Key" checked="@IsSelected(group.Key, item.Id)" @onchange="() => SelectItem(group.Key, item.Id)" />
+                                    <input class="h-4 w-4 rounded-full border-slate-300 text-amber-600 focus:ring-amber-500" type="checkbox" checked="@IsSelected(group.Key, item.Id)" @onchange="args => ToggleItemSelection(group.Key, item.Id, (bool?)args.Value == true)" />
                                     <span class="flex-1 text-slate-800">@item.Name</span>
                                     <span class="font-semibold text-slate-900">@item.Price.ToString("C")</span>
                                 </label>
@@ -44,11 +44,12 @@
             </div>
 
             <div class="mt-5 flex flex-wrap items-center gap-3">
-                <button type="submit" class="inline-flex items-center rounded-full bg-amber-500 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-amber-500/20 transition hover:-translate-y-0.5 hover:bg-amber-400">
+                <button type="submit" class="inline-flex items-center rounded-full bg-amber-500 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-amber-500/20 transition hover:-translate-y-0.5 hover:bg-amber-400 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:shadow-none" disabled="@(!_canSubmitOrder)">
                     Criar pedido
                 </button>
                 <span class="text-sm text-slate-500">Selecione pelo menos um sanduiche para concluir o pedido.</span>
             </div>
+            <ValidationMessage For="() => _form.ItemIds" class="mt-2 block text-sm text-red-700" />
         </EditForm>
     }
 
@@ -93,111 +94,3 @@
         </div>
     }
 </div>
-
-@code {
-    private sealed class CreateOrderForm
-    {
-        public List<int> ItemIds { get; set; } = [];
-    }
-
-    private CreateOrderForm _form = new();
-    private List<MenuItemResponse>? _menuItems;
-    private List<OrderResponse>? _orders;
-    private string? _error;
-    private readonly Dictionary<string, int> _selectedItemsByType = new();
-
-    protected override async Task OnInitializedAsync()
-    {
-        try
-        {
-            _menuItems = await Http.GetFromJsonAsync<List<MenuItemResponse>>("api/menu") ?? [];
-        }
-        catch (Exception ex)
-        {
-            _error = $"Erro ao carregar cardapio: {ex.Message}";
-            _menuItems = [];
-        }
-
-        await LoadOrdersAsync();
-    }
-
-    private void SelectItem(string itemType, int itemId)
-    {
-        _selectedItemsByType[itemType] = itemId;
-        _form.ItemIds = _selectedItemsByType.Values.ToList();
-    }
-
-    private bool IsSelected(string itemType, int itemId)
-    {
-        return _selectedItemsByType.TryGetValue(itemType, out var selectedId) && selectedId == itemId;
-    }
-
-    private static string GetGroupTitle(string itemType)
-    {
-        return itemType switch
-        {
-            "Sandwich" => "Sanduiche",
-            "FrenchFries" => "Batata",
-            "SoftDrink" => "Refrigerante",
-            _ => itemType
-        };
-    }
-
-    private async Task CreateOrderAsync()
-    {
-        _error = null;
-
-        var response = await Http.PostAsJsonAsync("api/orders", new CreateOrderRequest
-        {
-            ItemIds = _form.ItemIds
-        });
-
-        if (!response.IsSuccessStatusCode)
-        {
-            _error = await ExtractErrorMessageAsync(response);
-            return;
-        }
-
-        _form = new CreateOrderForm();
-        _selectedItemsByType.Clear();
-        await LoadOrdersAsync();
-    }
-
-    private async Task LoadOrdersAsync()
-    {
-        try
-        {
-            _orders = await Http.GetFromJsonAsync<List<OrderResponse>>("api/orders") ?? [];
-        }
-        catch (Exception ex)
-        {
-            _error = $"Erro ao carregar pedidos: {ex.Message}";
-            _orders = [];
-        }
-    }
-
-    private static async Task<string> ExtractErrorMessageAsync(HttpResponseMessage response)
-    {
-        var payload = await response.Content.ReadAsStringAsync();
-
-        try
-        {
-            using var document = System.Text.Json.JsonDocument.Parse(payload);
-
-            if (document.RootElement.TryGetProperty("detail", out var detail))
-            {
-                return detail.GetString() ?? payload;
-            }
-
-            if (document.RootElement.TryGetProperty("title", out var title))
-            {
-                return title.GetString() ?? payload;
-            }
-        }
-        catch
-        {
-        }
-
-        return payload;
-    }
-}

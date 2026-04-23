@@ -1,4 +1,5 @@
 @inherits LayoutComponentBase
+@inject IConfiguration Configuration
 
 <div class="shell">
     <div class="shell__glow shell__glow--one"></div>
@@ -14,7 +15,7 @@
             <nav class="nav-pillset">
                 <NavLink href="/blazor/menu" class="nav-pill">Cardapio</NavLink>
                 <NavLink href="/blazor/orders" class="nav-pill">Pedidos</NavLink>
-                <a href="/swagger" target="_blank" rel="noopener noreferrer" class="nav-pill nav-pill--ghost">Swagger</a>
+                <a href="@_swaggerUrl" target="_blank" rel="noopener noreferrer" class="nav-pill nav-pill--ghost">Swagger</a>
             </nav>
         </header>
 
@@ -174,3 +175,17 @@
         }
     }
 </style>
+
+@code {
+    private string _swaggerUrl = "/swagger";
+
+    protected override void OnInitialized()
+    {
+        var apiBaseUrl = Configuration["ApiBaseUrl"];
+
+        if (Uri.TryCreate(apiBaseUrl, UriKind.Absolute, out var apiUri))
+        {
+            _swaggerUrl = new Uri(apiUri, "swagger").ToString();
+        }
+    }
+}

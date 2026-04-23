@@ -3,7 +3,7 @@ using GoodHamburger.Domain.Exceptions;
 using System.Net;
 using System.Text.Json;
 
-namespace GoodHamburger.Web.Middleware;
+namespace GoodHamburger.Api.Middleware;
 
 public sealed class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<ExceptionHandlingMiddleware> logger)
 {
