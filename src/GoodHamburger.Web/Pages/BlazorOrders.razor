@@ -21,7 +21,7 @@
     }
     else
     {
-        <EditForm Model="_form" OnValidSubmit="CreateOrderAsync">
+        <EditForm Model="_form" OnValidSubmit="SaveOrderAsync">
             <DataAnnotationsValidator />
             <div class="grid gap-4 lg:grid-cols-3">
                 @foreach (var group in _menuItems.GroupBy(item => item.Type))
@@ -45,8 +45,14 @@
 
             <div class="mt-5 flex flex-wrap items-center gap-3">
                 <button type="submit" class="inline-flex items-center rounded-full bg-amber-500 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-amber-500/20 transition hover:-translate-y-0.5 hover:bg-amber-400 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:shadow-none" disabled="@(!_canSubmitOrder)">
-                    Criar pedido
+                    @(_editingOrderId.HasValue ? "Salvar alteracoes" : "Criar pedido")
                 </button>
+                @if (_editingOrderId.HasValue)
+                {
+                    <button type="button" class="inline-flex items-center rounded-full border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50" @onclick="CancelEdit">
+                        Cancelar edicao
+                    </button>
+                }
                 <span class="text-sm text-slate-500">Selecione pelo menos um sanduiche para concluir o pedido.</span>
             </div>
             <ValidationMessage For="() => _form.ItemIds" class="mt-2 block text-sm text-red-700" />
@@ -76,6 +82,7 @@
                         <th class="px-4 py-3">Subtotal</th>
                         <th class="px-4 py-3">Desconto</th>
                         <th class="px-4 py-3">Total</th>
+                        <th class="px-4 py-3">Acoes</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 bg-white">
@@ -87,6 +94,16 @@
                             <td class="px-4 py-3 font-semibold text-slate-900">@order.Subtotal.ToString("C")</td>
                             <td class="px-4 py-3 font-semibold text-slate-900">@order.DiscountAmount.ToString("C")</td>
                             <td class="px-4 py-3 font-semibold text-slate-900">@order.Total.ToString("C")</td>
+                            <td class="px-4 py-3">
+                                <div class="flex gap-2">
+                                    <button type="button" class="rounded-full border border-slate-300 px-3 py-1 text-xs font-semibold text-slate-700 transition hover:bg-slate-50" @onclick="() => StartEdit(order)">
+                                        Editar
+                                    </button>
+                                    <button type="button" class="rounded-full border border-red-300 px-3 py-1 text-xs font-semibold text-red-700 transition hover:bg-red-50" @onclick="() => DeleteOrderAsync(order.Id)">
+                                        Excluir
+                                    </button>
+                                </div>
+                            </td>
                         </tr>
                     }
                 </tbody>

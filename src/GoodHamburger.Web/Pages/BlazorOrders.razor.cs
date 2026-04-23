@@ -22,6 +22,7 @@ public partial class BlazorOrders : ComponentBase
     private string? _error;
     private readonly Dictionary<string, int> _selectedItemsByType = new();
     private bool _canSubmitOrder;
+    private int? _editingOrderId;
 
     protected override async Task OnInitializedAsync()
     {
@@ -69,7 +70,7 @@ public partial class BlazorOrders : ComponentBase
         };
     }
 
-    private async Task CreateOrderAsync()
+    private async Task SaveOrderAsync()
     {
         _error = null;
 
@@ -79,10 +80,22 @@ public partial class BlazorOrders : ComponentBase
             return;
         }
 
-        var result = await ApiClient.CreateOrderAsync(new CreateOrderRequest
+        ApiOperationResult result;
+
+        if (_editingOrderId.HasValue)
         {
-            ItemIds = _form.ItemIds
-        });
+            result = await ApiClient.UpdateOrderAsync(_editingOrderId.Value, new UpdateOrderRequest
+            {
+                ItemIds = _form.ItemIds
+            });
+        }
+        else
+        {
+            result = await ApiClient.CreateOrderAsync(new CreateOrderRequest
+            {
+                ItemIds = _form.ItemIds
+            });
+        }
 
         if (!result.IsSuccess)
         {
@@ -90,9 +103,47 @@ public partial class BlazorOrders : ComponentBase
             return;
         }
 
-        _form = new CreateOrderForm();
+        ClearSelection();
+        await LoadOrdersAsync();
+    }
+
+    private void StartEdit(OrderResponse order)
+    {
+        _editingOrderId = order.Id;
+        _error = null;
         _selectedItemsByType.Clear();
-        _canSubmitOrder = false;
+
+        foreach (var item in order.Items)
+        {
+            _selectedItemsByType[item.Type] = item.MenuItemId;
+        }
+
+        _form.ItemIds = _selectedItemsByType.Values.ToList();
+        _canSubmitOrder = HasSelectedSandwich();
+    }
+
+    private void CancelEdit()
+    {
+        ClearSelection();
+    }
+
+    private async Task DeleteOrderAsync(int orderId)
+    {
+        _error = null;
+
+        var result = await ApiClient.DeleteOrderAsync(orderId);
+
+        if (!result.IsSuccess)
+        {
+            _error = result.ErrorMessage;
+            return;
+        }
+
+        if (_editingOrderId == orderId)
+        {
+            ClearSelection();
+        }
+
         await LoadOrdersAsync();
     }
 
@@ -127,5 +178,13 @@ public partial class BlazorOrders : ComponentBase
             _error = $"Erro ao carregar pedidos: {ex.Message}";
             _orders = [];
         }
+    }
+
+    private void ClearSelection()
+    {
+        _editingOrderId = null;
+        _form = new CreateOrderForm();
+        _selectedItemsByType.Clear();
+        _canSubmitOrder = false;
     }
 }

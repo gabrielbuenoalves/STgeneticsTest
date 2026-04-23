@@ -27,6 +27,30 @@ public sealed class GoodHamburgerApiClient(HttpClient httpClient) : IGoodHamburg
         return new ApiOperationResult(false, await ExtractErrorMessageAsync(response, cancellationToken));
     }
 
+    public async Task<ApiOperationResult> UpdateOrderAsync(int orderId, UpdateOrderRequest request, CancellationToken cancellationToken = default)
+    {
+        var response = await httpClient.PutAsJsonAsync($"api/orders/{orderId}", request, cancellationToken);
+
+        if (response.IsSuccessStatusCode)
+        {
+            return new ApiOperationResult(true);
+        }
+
+        return new ApiOperationResult(false, await ExtractErrorMessageAsync(response, cancellationToken));
+    }
+
+    public async Task<ApiOperationResult> DeleteOrderAsync(int orderId, CancellationToken cancellationToken = default)
+    {
+        var response = await httpClient.DeleteAsync($"api/orders/{orderId}", cancellationToken);
+
+        if (response.IsSuccessStatusCode)
+        {
+            return new ApiOperationResult(true);
+        }
+
+        return new ApiOperationResult(false, await ExtractErrorMessageAsync(response, cancellationToken));
+    }
+
     private static async Task<string> ExtractErrorMessageAsync(HttpResponseMessage response, CancellationToken cancellationToken)
     {
         var payload = await response.Content.ReadAsStringAsync(cancellationToken);
