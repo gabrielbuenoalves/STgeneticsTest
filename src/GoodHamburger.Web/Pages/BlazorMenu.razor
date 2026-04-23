@@ -1,0 +1,47 @@
+@page "/blazor/menu"
+@inject HttpClient Http
+
+<div class="space-y-6">
+    <div class="space-y-2">
+        <p class="text-xs font-bold uppercase tracking-[0.24em] text-amber-600">Cardapio</p>
+        <h2 class="text-3xl font-black tracking-tight text-slate-950">Itens cadastrados</h2>
+    </div>
+
+    @if (_items is null)
+    {
+        <p class="text-slate-500">Carregando...</p>
+    }
+    else
+    {
+        <div class="overflow-hidden rounded-2xl border border-slate-200">
+            <table class="min-w-full divide-y divide-slate-200">
+                <thead class="bg-slate-50 text-left text-xs font-bold uppercase tracking-[0.18em] text-slate-500">
+                    <tr>
+                        <th class="px-4 py-3">Nome</th>
+                        <th class="px-4 py-3">Tipo</th>
+                        <th class="px-4 py-3">Preco</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 bg-white">
+                    @foreach (var item in _items)
+                    {
+                        <tr class="transition hover:bg-amber-50/60">
+                            <td class="px-4 py-3 font-medium text-slate-900">@item.Name</td>
+                            <td class="px-4 py-3 text-slate-600">@item.Type</td>
+                            <td class="px-4 py-3 font-semibold text-slate-900">@item.Price.ToString("C")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+@code {
+    private List<MenuItemResponse>? _items;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _items = await Http.GetFromJsonAsync<List<MenuItemResponse>>("api/menu") ?? [];
+    }
+}

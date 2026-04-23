@@ -1,0 +1,176 @@
+@inherits LayoutComponentBase
+
+<div class="shell">
+    <div class="shell__glow shell__glow--one"></div>
+    <div class="shell__glow shell__glow--two"></div>
+
+    <div class="shell__inner">
+        <header class="topbar">
+            <div class="brand">
+                <span class="brand__eyebrow">Good Hamburger</span>
+                <h1 class="brand__title">Hamburgueria digital</h1>
+            </div>
+
+            <nav class="nav-pillset">
+                <NavLink href="/blazor/menu" class="nav-pill">Cardapio</NavLink>
+                <NavLink href="/blazor/orders" class="nav-pill">Pedidos</NavLink>
+                <a href="/swagger" target="_blank" rel="noopener noreferrer" class="nav-pill nav-pill--ghost">Swagger</a>
+            </nav>
+        </header>
+
+        <main class="content-surface">
+            @Body
+        </main>
+    </div>
+</div>
+
+<style>
+    .shell {
+        position: relative;
+        min-height: 100vh;
+        overflow: hidden;
+        background:
+            radial-gradient(circle at top left, rgba(245, 158, 11, 0.12), transparent 30%),
+            radial-gradient(circle at top right, rgba(15, 23, 42, 0.08), transparent 26%),
+            linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+        color: #0f172a;
+    }
+
+    .shell__glow {
+        position: absolute;
+        border-radius: 9999px;
+        filter: blur(20px);
+        pointer-events: none;
+        opacity: 0.5;
+    }
+
+    .shell__glow--one {
+        top: -3rem;
+        right: -2rem;
+        width: 14rem;
+        height: 14rem;
+        background: rgba(251, 191, 36, 0.22);
+    }
+
+    .shell__glow--two {
+        bottom: 8rem;
+        left: -4rem;
+        width: 18rem;
+        height: 18rem;
+        background: rgba(148, 163, 184, 0.22);
+    }
+
+    .shell__inner {
+        position: relative;
+        z-index: 1;
+        width: min(1120px, calc(100% - 2rem));
+        margin: 0 auto;
+        padding: 1.25rem 0 2rem;
+    }
+
+    .topbar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 1rem 1.15rem;
+        border: 1px solid rgba(148, 163, 184, 0.28);
+        border-radius: 28px;
+        background: rgba(255, 255, 255, 0.75);
+        box-shadow: 0 20px 45px rgba(15, 23, 42, 0.08);
+        backdrop-filter: blur(18px);
+    }
+
+    .brand {
+        display: grid;
+        gap: 0.25rem;
+    }
+
+    .brand__eyebrow {
+        font-size: 0.72rem;
+        font-weight: 800;
+        letter-spacing: 0.28em;
+        text-transform: uppercase;
+        color: #d97706;
+    }
+
+    .brand__title {
+        margin: 0;
+        font-size: 1.7rem;
+        line-height: 1;
+        letter-spacing: -0.04em;
+    }
+
+    .nav-pillset {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.6rem;
+    }
+
+    .nav-pill {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 42px;
+        padding: 0.55rem 1rem;
+        border: 1px solid rgba(148, 163, 184, 0.28);
+        border-radius: 9999px;
+        background: rgba(255, 255, 255, 0.9);
+        color: #334155;
+        font-size: 0.95rem;
+        font-weight: 700;
+        text-decoration: none;
+        transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+    }
+
+    .nav-pill:hover {
+        transform: translateY(-1px);
+        border-color: rgba(245, 158, 11, 0.45);
+        background: #fff7ed;
+        color: #9a3412;
+    }
+
+    .nav-pill.active {
+        border-color: rgba(245, 158, 11, 0.55);
+        background: linear-gradient(180deg, #fef3c7 0%, #fde68a 100%);
+        color: #92400e;
+        box-shadow: 0 10px 24px rgba(245, 158, 11, 0.18);
+    }
+
+    .nav-pill--ghost {
+        background: transparent;
+    }
+
+    .content-surface {
+        margin-top: 1.25rem;
+        padding: 1.5rem;
+        border: 1px solid rgba(148, 163, 184, 0.24);
+        border-radius: 32px;
+        background: rgba(255, 255, 255, 0.78);
+        box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+        backdrop-filter: blur(14px);
+    }
+
+    @@media (max-width: 640px) {
+        .shell__inner {
+            width: min(100% - 1rem, 1120px);
+            padding-top: 0.5rem;
+        }
+
+        .topbar {
+            border-radius: 24px;
+            padding: 1rem;
+        }
+
+        .brand__title {
+            font-size: 1.45rem;
+        }
+
+        .content-surface {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: 24px;
+        }
+    }
+</style>
