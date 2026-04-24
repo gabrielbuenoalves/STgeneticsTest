@@ -1,96 +1,98 @@
-# Good Hamburger - Desafio Tecnico C#
+# Good Hamburger - Desafio Técnico C#
 
-Implementacao do desafio da lanchonete Good Hamburger usando .NET 10, Blazor Server, API REST separada e SQL Server.
+Aplicação para o desafio da lanchonete Good Hamburger usando .NET 10, API REST separada, frontend Blazor Server e SQL Server em Docker.
 
-# Stack e arquitetura
+## Resumo
 
-- .NET 10 (ASP.NET Core)
-- Arquitetura em camadas:
-  - `GoodHamburger.Domain`: entidades e regras de negocio
-  - `GoodHamburger.Application`: casos de uso, DTOs e contratos
-  - `GoodHamburger.Infrastructure`: EF Core, repositorios e migrations
-  - `GoodHamburger.Api`: host exclusivo da API REST
-  - `GoodHamburger.Web`: host exclusivo do frontend Blazor Server
-  - `GoodHamburger.Tests.Unit`: testes unitarios das regras
-- EF Core com SQL Server e migrations
-- Middleware global de tratamento de erros na API
+O projeto foi dividido em camadas e em dois hosts independentes:
 
-# Requisitos atendidos
+- `GoodHamburger.Domain`: regras de negócio e entidades
+- `GoodHamburger.Application`: casos de uso, DTOs e contratos
+- `GoodHamburger.Infrastructure`: EF Core, repositórios, migrations e seed
+- `GoodHamburger.Api`: host exclusivo da API REST
+- `GoodHamburger.Web`: host exclusivo do frontend Blazor Server
+- `GoodHamburger.Tests.Unit`: testes unitários das regras de negócio
 
-- API REST em C# / ASP.NET Core separada do frontend
-- CRUD completo de pedidos:
+O frontend não acessa banco nem expõe endpoints próprios. Ele consome a API por `HttpClient` com a URL configurada em `ApiBaseUrl`.
+
+## O que está entregue
+
+- API REST separada do frontend
+- CRUD completo de pedidos
   - `POST /api/orders`
   - `GET /api/orders`
   - `GET /api/orders/{id}`
   - `PUT /api/orders/{id}`
   - `DELETE /api/orders/{id}`
-- Endpoint de cardapio:
+- Endpoint de cardápio
   - `GET /api/menu`
-- Calculo de subtotal, desconto e total final
-- Regras de desconto:
-  - Sanduiche + batata + refrigerante: 20%
-  - Sanduiche + refrigerante: 15%
-  - Sanduiche + batata: 10%
-- Validacao de itens duplicados no backend (1 por categoria por pedido)
-- Validacao no frontend para impedir envio sem item e sem sanduiche
-- Frontend Blazor consumindo API via `HttpClient` com `ApiBaseUrl` configuravel
-- Testes unitarios das regras de negocio
+- Cálculo de subtotal, desconto e total final
+- Regras de desconto para combinações de sanduíche, batata e refrigerante
+- Validação de itens duplicados no backend
+- Validação no frontend para impedir pedidos inválidos
+- Testes unitários das regras de negócio
 
-# Regras de negocio implementadas
+## Regras principais
 
-- Cada pedido aceita no maximo:
-  - 1 sanduiche
-  - 1 batata
-  - 1 refrigerante
-- Pedido sem sanduiche e considerado invalido
-- Itens duplicados retornam erro claro
-- Itens inexistentes no cardapio retornam erro claro
+- cada pedido aceita no máximo 1 item por categoria
+- é obrigatório selecionar um sanduíche
+- itens inexistentes no cardápio retornam erro claro
+- itens duplicados retornam erro claro
 
-# Executando localmente
+## Requisitos para rodar
 
-# 1) Subir o SQL Server no Docker
+- .NET SDK 10.0.100 ou superior, compatível com `global.json`
+- Docker Desktop ou Docker Engine com Docker Compose
+- certificado HTTPS de desenvolvimento confiável no sistema
+
+Se o navegador bloquear HTTPS local na primeira execução, rode:
+
+```bash
+dotnet dev-certs https --trust
+```
+
+## Como executar
+
+1. Suba o SQL Server no Docker:
 
 ```bash
 docker compose up -d
 ```
 
-# 2) Restaurar dependencias
+2. Restaure as dependências:
 
 ```bash
 dotnet restore
 ```
 
-# 3) Confiar no certificado HTTPS de desenvolvimento (macOS/Linux/Windows)
-
-```bash
-dotnet dev-certs https --clean
-dotnet dev-certs https --trust
-```
-
-## 4) Rodar a API (porta dedicada)
+3. Rode a API em um terminal:
 
 ```bash
 dotnet run --project src/GoodHamburger.Api/GoodHamburger.Api.csproj --launch-profile https
 ```
 
-# 5) Rodar o frontend Blazor (porta dedicada)
+4. Rode o frontend em outro terminal:
 
 ```bash
 dotnet run --project src/GoodHamburger.Web/GoodHamburger.Web.csproj --launch-profile https
 ```
 
-# Acessos locais
+## URLs locais
 
 - API HTTPS: `https://localhost:7122`
-- Swagger API: `https://localhost:7122/swagger`
-- Frontend Blazor HTTPS: `https://localhost:7121`
-- Tela de cardapio: `https://localhost:7121/blazor/menu`
-- Tela de pedidos: `https://localhost:7121/blazor/orders`
+- Swagger da API: `https://localhost:7122/swagger`
+- Frontend HTTPS: `https://localhost:7121`
+- Cardápio: `https://localhost:7121/blazor/menu`
+- Pedidos: `https://localhost:7121/blazor/orders`
 
-Observacao: essas portas sao apenas a configuracao atual do projeto. Se quiser, altere em `Properties/launchSettings.json` de cada host.
-O frontend usa `ApiBaseUrl` em `src/GoodHamburger.Web/appsettings.json`.
+## Configuração
 
-# Testes
+- A API lê a connection string em `src/GoodHamburger.Api/appsettings.json`
+- O frontend lê a URL da API em `src/GoodHamburger.Web/appsettings.Development.json`
+- As portas estão em `src/GoodHamburger.Api/Properties/launchSettings.json` e `src/GoodHamburger.Web/Properties/launchSettings.json`
+- Se mudar as portas, atualize também `ApiBaseUrl` no frontend e `FrontendBaseUrl` na API
+
+## Testes
 
 ```bash
 dotnet test
@@ -98,12 +100,18 @@ dotnet test
 
 ## Tratamento de erros
 
-Middleware global na API captura excecoes de dominio e recursos nao encontrados, retornando payload JSON padronizado:
+A API usa middleware global para padronizar erros de domínio e recursos não encontrados. Exemplo de resposta:
 
 ```json
 {
-  "title": "Erro de validacao de negocio",
+  "title": "Erro de validação de negócio",
   "status": 400,
-  "detail": "Itens duplicados nao permitidos: apenas um sanduiche por pedido."
+  "detail": "Itens duplicados não permitidos: apenas um sanduíche por pedido."
 }
 ```
+
+## Observações
+
+- O SQL Server do Docker usa a senha definida em `docker-compose.yml` e nas connection strings do projeto.
+- O Swagger fica disponível apenas no host da API.
+- O frontend Blazor apenas consome a API.
